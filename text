@@ -1,0 +1,314 @@
+// "use client";
+// import { useEffect, useState } from "react";
+// import { useRouter } from "next/navigation";
+// import {
+//   Blockchain,
+//   CrossmintAASDK,
+//   EVMAAWallet,
+//   ViemAccount,
+// } from "@crossmint/client-sdk-aa";
+// import { english, generateMnemonic, mnemonicToAccount } from "viem/accounts";
+
+// // List of authorized emails
+// const authorizedEmails = [
+//   "haleemayomide02@gmail.com",
+//   "abdulhaleemayomide@gmail.com.com",
+//   "Rohit@crossmint.com",
+//   "Danny@crossmint.com",
+//   "Connor@crossmint.com",
+// ];
+
+// export default function CreateWallet() {
+//   const [wallet, setWallet] = useState<EVMAAWallet | null>(null);
+//   const [address, setAddress] = useState<string>("");
+//   const [loading, setLoading] = useState<boolean>(false);
+//   const [email, setEmail] = useState<string>("");
+//   const [error, setError] = useState<string>("");
+//   const router = useRouter();
+
+//   useEffect(() => {
+//     const savedEmail = localStorage.getItem("email") || "";
+//     setEmail(savedEmail);
+//   }, []);
+
+//   const handleEmailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+//     setEmail(event.target.value);
+//   };
+
+//   const createAAWallet = async () => {
+//     setLoading(true);
+//     setError(""); // Clear any previous error
+//     try {
+//       console.log("Attempting to create wallet for email:", email);
+//       if (!authorizedEmails.includes(email)) {
+//         throw new Error("Unauthorized email address.");
+//       }
+
+//       const wallet = await createAAWalletHelper();
+//       console.log("Wallet created successfully:", wallet);
+//       setWallet(wallet);
+
+//       if (wallet && "address" in wallet) {
+//         setAddress(wallet.address as string);
+//       } else {
+//         console.warn("The wallet object does not have an address property.");
+//       }
+//       localStorage.setItem("email", email); // Save email to local storage
+//       router.push("/minting"); // Navigate to the minting page after wallet creation
+//     } catch (error: any) {
+//       console.error("Error creating wallet:", error);
+//       setError(error.message || "An error occurred.");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const createAAWalletHelper = async (): Promise<EVMAAWallet> => {
+//     if (typeof window !== "undefined") {
+//       console.log("Initializing CrossmintAASDK");
+
+//       const xm = CrossmintAASDK.init({
+//         apiKey:
+//           process.env.NEXT_PUBLIC_API_KEY ||
+//           "ck_staging_5doK2Rhn54iLVpkc81XizRnr6A7mcXJQx4S3vXjjdhv6t225JXdt5Z3Y2fFVneDZpVC27vENcdYj5TGtWKkgeUe83hHiZtfYXLoF85gCuRHxFpb3YskNDGRNvoJTDyztzDJoDvfG5vjvtFfcYFgqWjfuvNZC1vqsBs7wL7K3oP4KSFqqJC1mezXSR5sbrBRCbBMr4eJbLUnwpbtNPeJokizW",
+//       });
+
+//       const storedMnemonic = localStorage.getItem("mnemonic");
+
+//       if (storedMnemonic) {
+//         console.log("Retrieved mnemonic from localStorage:", storedMnemonic);
+//         const account = mnemonicToAccount(storedMnemonic);
+//         console.log("Generated account from mnemonic:", account);
+
+//         const wallet = await xm.getOrCreateWallet(
+//           {
+//             email: email,
+//           },
+//           Blockchain.BASE_SEPOLIA,
+//           { signer }
+//         );
+//         console.log("Wallet details:", wallet);
+//         return wallet;
+//       } else {
+//         const mnemonic = generateMnemonic(english);
+//         localStorage.setItem("mnemonic", mnemonic);
+//         console.log("Generated and stored new mnemonic:", mnemonic);
+
+//         const account = mnemonicToAccount(mnemonic);
+//         console.log("Generated account from new mnemonic:", account);
+
+//         const wallet = await xm.getOrCreateWallet(
+//           {
+//             email: email,
+//           },
+//           Blockchain.BASE_SEPOLIA,
+//           { signer }
+//         );
+//         console.log("Wallet details:", wallet);
+
+//         return wallet;
+//       }
+//     } else {
+//       throw new Error("Window is undefined");
+//     }
+//   };
+//   //   }
+//   //     const account = mnemonicToAccount(mnemonic) as any;
+//   //     console.log("Generated account from mnemonic:", account);
+
+//   //     const signer: ViemAccount = {
+//   //       type: "VIEM_ACCOUNT",
+//   //       account,
+//   //     };
+
+//   //     const wallet = await xm.getOrCreateWallet(
+//   //       { email },
+//   //       Blockchain.BASE_SEPOLIA,
+//   //       { signer }
+//   //     );
+//   //     console.log("Created wallet via CrossmintAASDK:", wallet);
+
+//   //     const walletAddress = await wallet.getAddress();
+//   //     console.log("Wallet address:", walletAddress);
+//   //     setAddress(walletAddress);
+//   //     localStorage.setItem("walletAddress", walletAddress); // Store wallet address for the minting page
+
+//   //     return wallet;
+//   //   } else {
+//   //     throw new Error("Window is undefined.");
+//   //   }
+//   // };
+
+//   // const saveEmail = (email: string) => {
+//   //   setEmail(email);
+//   //   localStorage.setItem("email", email);
+//   // };
+
+//   return (
+//     <div className="flex flex-col items-center justify-center min-h-screen bg-black-100">
+//       <div className="p-5">
+//         <div className="text-center mb-5">CREATE A SMART WALLET</div>
+//         {!wallet ? (
+//           <>
+//             {loading ? (
+//               <div className="py-3 text-center">Loading...</div>
+//             ) : (
+//               <div className="text-center">
+//                 <input
+//                   type="email"
+//                   value={email}
+//                   onChange={(e) => setEmail(e.target.value)}
+//                   placeholder="Enter your email"
+//                   className="border rounded w-72 p-2 my-2 text-black"
+//                 />
+//                 <button
+//                   onClick={createAAWallet}
+//                   className="bg-blue-500 hover:bg-blue-700 text-white font-bold ml-3 py-2 px-4 rounded focus:outline-none"
+//                 >
+//                   Create AA Wallet
+//                 </button>
+//                 {error && <div className="text-red-500 mt-2">{error}</div>}
+//               </div>
+//             )}
+//           </>
+//         ) : (
+//           <div className="py-3 text-center">Address: {address}</div>
+//         )}
+//       </div>
+//     </div>
+//   );
+// }
+
+// ---------------------------------
+
+// "use client";
+// import { useEffect, useState } from "react";
+// import { useRouter } from "next/navigation";
+// import {
+//   Blockchain,
+//   CrossmintAASDK,
+//   EVMAAWallet,
+// } from "@crossmint/client-sdk-aa";
+
+// // List of authorized emails
+// const authorizedEmails = [
+//   "haleemayomide02@gmail.com",
+//   "abdulhaleemayomide@gmail.com",
+//   "Rohit@crossmint.com",
+//   "Danny@crossmint.com",
+//   "Connor@crossmint.com",
+// ];
+
+// export default function CreateWallet() {
+//   const [wallet, setWallet] = useState<EVMAAWallet | null>(null);
+//   const [address, setAddress] = useState<string>("");
+//   const [loading, setLoading] = useState<boolean>(false);
+//   const [email, setEmail] = useState<string>("");
+//   const [error, setError] = useState<string>("");
+//   const router = useRouter();
+
+//   useEffect(() => {
+//     const savedEmail = localStorage.getItem("email") || "";
+//     setEmail(savedEmail);
+//   }, []);
+
+//   const handleEmailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+//     setEmail(event.target.value);
+//   };
+
+//   const createAAWallet = async () => {
+//     setLoading(true);
+//     setError(""); // Clear any previous error
+//     try {
+//       console.log("Attempting to create wallet for email:", email);
+//       if (!authorizedEmails.includes(email)) {
+//         throw new Error("Unauthorized email address.");
+//       }
+
+//       const wallet = await createAAWalletHelper();
+//       console.log("Wallet created successfully:", wallet);
+//       setWallet(wallet);
+
+//       if (wallet && "address" in wallet) {
+//         setAddress(wallet.address as string);
+//       } else {
+//         console.warn("The wallet object does not have an address property.");
+//       }
+//       localStorage.setItem("email", email); // Save email to local storage
+//       router.push("/minting"); // Navigate to the minting page after wallet creation
+//     } catch (error: any) {
+//       console.error("Error creating wallet:", error);
+//       setError(error.message || "An error occurred.");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const createAAWalletHelper = async (): Promise<EVMAAWallet> => {
+//     if (typeof window !== "undefined" && (window as any).ethereum) {
+//       console.log("Initializing CrossmintAASDK");
+
+//       const xm = CrossmintAASDK.init({
+//         apiKey:
+//           process.env.NEXT_PUBLIC_API_KEY ||
+//           "ck_staging_5doK2Rhn54iLVpkc81XizRnr6A7mcXJQx4S3vXjjdhv6t225JXdt5Z3Y2fFVneDZpVC27vENcdYj5TGtWKkgeUe83hHiZtfYXLoF85gCuRHxFpb3YskNDGRNvoJTDyztzDJoDvfG5vjvtFfcYFgqWjfuvNZC1vqsBs7wL7K3oP4KSFqqJC1mezXSR5sbrBRCbBMr4eJbLUnwpbtNPeJokizW",
+//       });
+
+//       try {
+//         // Prompt user to enable MetaMask (or another wallet) if it's not already enabled
+//         await (window as any).ethereum.request({
+//           method: "eth_requestAccounts",
+//         });
+//       } catch (error) {
+//         console.error("Error accessing Ethereum accounts:", error);
+//         throw new Error("MetaMask access denied");
+//       }
+
+//       const signer = (window as any).ethereum;
+
+//       const wallet = await xm.getOrCreateWallet(
+//         { email: email },
+//         Blockchain.BASE_SEPOLIA,
+//         { signer }
+//       );
+//       console.log("Wallet details:", wallet);
+//       return wallet;
+//     } else {
+//       throw new Error("MetaMask is not available");
+//     }
+//   };
+
+//   return (
+//     <div className="flex flex-col items-center justify-center min-h-screen bg-black-100">
+//       <div className="p-5">
+//         <div className="text-center mb-5">CREATE A SMART WALLET</div>
+//         {!wallet ? (
+//           <>
+//             {loading ? (
+//               <div className="py-3 text-center">Loading...</div>
+//             ) : (
+//               <div className="text-center">
+//                 <input
+//                   type="email"
+//                   value={email}
+//                   onChange={(e) => setEmail(e.target.value)}
+//                   placeholder="Enter your email"
+//                   className="border rounded w-72 p-2 my-2 text-black"
+//                 />
+//                 <button
+//                   onClick={createAAWallet}
+//                   className="bg-blue-500 hover:bg-blue-700 text-white font-bold ml-3 py-2 px-4 rounded focus:outline-none"
+//                 >
+//                   Create AA Wallet
+//                 </button>
+//                 {error && <div className="text-red-500 mt-2">{error}</div>}
+//               </div>
+//             )}
+//           </>
+//         ) : (
+//           <div className="py-3 text-center">Address: {address}</div>
+//         )}
+//       </div>
+//     </div>
+//   );
+// }
